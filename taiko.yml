@@ -1,0 +1,80 @@
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      max-size: 100m
+      max-file: "3"
+      tag: '{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}'
+
+services:
+  l2_execution_engine:
+    image: us-docker.pkg.dev/evmchain/images/taiko-geth:v1.15.1-hotfix
+    restart: unless-stopped
+    pull_policy: always
+    env_file:
+      - .env
+    stop_grace_period: 3m
+    volumes:
+      - l2_execution_engine_data:/data/taiko-geth
+    ports:
+      - "${PORT_L2_EXECUTION_ENGINE_P2P}:${PORT_L2_EXECUTION_ENGINE_P2P}"
+      - "${PORT_L2_EXECUTION_ENGINE_P2P}:${PORT_L2_EXECUTION_ENGINE_P2P}/udp"
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        exec geth \
+          --taiko \
+          --networkid "${CHAIN_ID}" \
+          --gcmode archive \
+          --datadir /data/taiko-geth \
+          --metrics \
+          --metrics.addr "0.0.0.0" \
+          --bootnodes ${BOOT_NODES} \
+          --authrpc.addr "0.0.0.0" \
+          --authrpc.vhosts "*" \
+          --http \
+          --http.api debug,eth,net,web3,txpool,taiko \
+          --http.addr "0.0.0.0" \
+          --http.vhosts "*" \
+          --ws \
+          --ws.api debug,eth,net,web3,txpool,taiko \
+          --ws.addr "0.0.0.0" \
+          --ws.origins "*" \
+          --gpo.defaultprice "10000000" \
+          --port ${PORT_L2_EXECUTION_ENGINE_P2P} \
+          --discovery.port ${PORT_L2_EXECUTION_ENGINE_P2P} \
+          --maxpeers ${MAXPEERS:-50} \
+          --maxpendpeers ${MAXPENDPEERS:-0} \
+          ${EXTRA_FLAGS:-}
+    <<: *logging
+
+  taiko_client_driver:
+    image: us-docker.pkg.dev/evmchain/images/taiko-client:taiko-alethia-client-v1.5.1
+    restart: unless-stopped
+    pull_policy: always
+    depends_on:
+      - l2_execution_engine
+    env_file:
+      - .env
+    volumes:
+      - l2_execution_engine_data:/data/taiko-geth
+      - ./script:/script
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        exec taiko-client driver \
+        --l1.ws "${L1_ENDPOINT_WS}" \
+        --l2.ws ws://l2_execution_engine:8546 \
+        --l1.beacon "${L1_BEACON_HTTP}" \
+        --l2.auth http://l2_execution_engine:8551 \
+        --taikoL1 "${TAIKO_L1_ADDRESS}" \
+        --taikoL2 "${TAIKO_L2_ADDRESS}" \
+        --jwtSecret /data/taiko-geth/geth/jwtsecret \
+        --p2p.sync \
+        --p2p.checkPointSyncUrl "${P2P_SYNC_URL}"
+    <<: *logging
+
+volumes:
+  l2_execution_engine_data:
