@@ -48,6 +48,31 @@ services:
           --maxpendpeers ${MAXPENDPEERS:-0} \
           ${EXTRA_FLAGS:-}
     <<: *logging
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.${RPC_HOST}.service=${RPC_HOST}
+      - traefik.http.routers.${RPC_HOST}.entrypoints=websecure
+      - traefik.http.routers.${RPC_HOST}.rule=Host(`${RPC_HOST}.${DOMAIN}`)
+      - traefik.http.routers.${RPC_HOST}.tls.certresolver=letsencrypt
+      - traefik.http.routers.${RPC_HOST}lb.service=${RPC_HOST}
+      - traefik.http.routers.${RPC_HOST}lb.entrypoints=websecure
+      - traefik.http.routers.${RPC_HOST}lb.rule=Host(`${RPC_LB}.${DOMAIN}`)
+      - traefik.http.routers.${RPC_HOST}lb.tls.certresolver=letsencrypt
+      - traefik.http.services.${RPC_HOST}.loadbalancer.server.port=${PORT_L2_EXECUTION_ENGINE_HTTP:-8545}
+      - traefik.http.routers.${WS_HOST}.service=${WS_HOST}
+      - traefik.http.routers.${WS_HOST}.entrypoints=websecure
+      - traefik.http.routers.${WS_HOST}.rule=Host(`${WS_HOST}.${DOMAIN}`)
+      - traefik.http.routers.${WS_HOST}.tls.certresolver=letsencrypt
+      - traefik.http.routers.${WS_HOST}lb.service=${WS_HOST}
+      - traefik.http.routers.${WS_HOST}lb.entrypoints=websecure
+      - traefik.http.routers.${WS_HOST}lb.rule=Host(`${WS_LB}.${DOMAIN}`)
+      - traefik.http.routers.${WS_HOST}lb.tls.certresolver=letsencrypt
+      - traefik.http.services.${WS_HOST}.loadbalancer.server.port=${PORT_L2_EXECUTION_ENGINE_WS:-8546}
+      - metrics.scrape=true
+      - metrics.path=/metrics
+      - metrics.port=${PORT_L2_EXECUTION_ENGINE_METRICS:-6060}
+      - metrics.instance=${RPC_HOST}
+      - metrics.network=${RPC_HOST}
 
   taiko_client_driver:
     image: us-docker.pkg.dev/evmchain/images/taiko-client:${TAIKO_CLIENT_VERSION}
@@ -55,11 +80,8 @@ services:
     pull_policy: always
     depends_on:
       - l2_execution_engine
-    env_file:
-      - .env
     volumes:
       - l2_execution_engine_data:/data/taiko-geth
-      - ./script:/script
     entrypoint:
       - /bin/sh
       - -c
