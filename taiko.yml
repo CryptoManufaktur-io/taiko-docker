@@ -8,7 +8,7 @@ x-logging: &logging
 
 services:
   l2_execution_engine:
-    image: us-docker.pkg.dev/evmchain/images/taiko-geth:v1.15.1-hotfix
+    image: us-docker.pkg.dev/evmchain/images/taiko-geth:${L2_EXECUTION_ENGINE_VERSION}
     restart: unless-stopped
     pull_policy: always
     env_file:
@@ -17,8 +17,8 @@ services:
     volumes:
       - l2_execution_engine_data:/data/taiko-geth
     ports:
-      - "${PORT_L2_EXECUTION_ENGINE_P2P}:${PORT_L2_EXECUTION_ENGINE_P2P}"
-      - "${PORT_L2_EXECUTION_ENGINE_P2P}:${PORT_L2_EXECUTION_ENGINE_P2P}/udp"
+      - "${PORT_L2_EXECUTION_ENGINE_P2P:-30306}:${PORT_L2_EXECUTION_ENGINE_P2P:-30306}"
+      - "${PORT_L2_EXECUTION_ENGINE_P2P:-30306}:${PORT_L2_EXECUTION_ENGINE_P2P:-30306}/udp"
     entrypoint:
       - /bin/sh
       - -c
@@ -42,15 +42,15 @@ services:
           --ws.addr "0.0.0.0" \
           --ws.origins "*" \
           --gpo.defaultprice "10000000" \
-          --port ${PORT_L2_EXECUTION_ENGINE_P2P} \
-          --discovery.port ${PORT_L2_EXECUTION_ENGINE_P2P} \
+          --port ${PORT_L2_EXECUTION_ENGINE_P2P:-30306} \
+          --discovery.port ${PORT_L2_EXECUTION_ENGINE_P2P:-30306} \
           --maxpeers ${MAXPEERS:-50} \
           --maxpendpeers ${MAXPENDPEERS:-0} \
           ${EXTRA_FLAGS:-}
     <<: *logging
 
   taiko_client_driver:
-    image: us-docker.pkg.dev/evmchain/images/taiko-client:taiko-alethia-client-v1.5.1
+    image: us-docker.pkg.dev/evmchain/images/taiko-client:${TAIKO_CLIENT_VERSION}
     restart: unless-stopped
     pull_policy: always
     depends_on:
@@ -66,7 +66,7 @@ services:
       - |
         exec taiko-client driver \
         --l1.ws "${L1_ENDPOINT_WS}" \
-        --l2.ws ws://l2_execution_engine:8546 \
+        --l2.ws ws://l2_execution_engine:${PORT_L2_EXECUTION_ENGINE_WS:-8546} \
         --l1.beacon "${L1_BEACON_HTTP}" \
         --l2.auth http://l2_execution_engine:8551 \
         --taikoL1 "${TAIKO_L1_ADDRESS}" \
