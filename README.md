@@ -7,6 +7,9 @@ and Prometheus remote write; use `:ext-network.yml` in `COMPOSE_FILE` inside `.e
 
 If you want the RPC ports exposed locally, use `rpc-shared.yml` in `COMPOSE_FILE` inside `.env`.
 
+## Upstream repo
+https://github.com/taikoxyz/simple-taiko-node
+
 ## Quick Start
 
 The `./taiko` script can be used as a quick-start:
