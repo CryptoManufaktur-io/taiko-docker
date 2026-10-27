@@ -30,11 +30,11 @@ services:
       --authrpc.addr "0.0.0.0"
       --authrpc.vhosts "*"
       --http
-      --http.api debug,eth,net,web3,txpool,taiko
+      --http.api eth,net,web3,txpool,taiko
       --http.addr "0.0.0.0"
       --http.vhosts "*"
       --ws
-      --ws.api debug,eth,net,web3,txpool,taiko
+      --ws.api eth,net,web3,txpool,taiko
       --ws.addr "0.0.0.0"
       --ws.origins "*"
       --port ${PORT_L2_EXECUTION_ENGINE_P2P:-30306}

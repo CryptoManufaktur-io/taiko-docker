@@ -31,6 +31,8 @@ To update the software, run `./taiko update` and then `./taiko up`
 `custom.yml` is not tracked by git and can be used to override anything in the provided yml files. If you use it,
 add it to `COMPOSE_FILE` in `.env`
 
+The public HTTP/WS APIs do not expose the `debug` namespace, since it allows rewinding the chain head and profiling. If you really need it, set `EXTRA_FLAGS=--http.api debug,eth,net,web3,txpool,taiko --ws.api debug,eth,net,web3,txpool,taiko` in `.env`.
+
 ## Components
 
 This repository includes:
