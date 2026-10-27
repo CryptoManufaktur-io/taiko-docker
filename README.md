@@ -31,7 +31,7 @@ To update the software, run `./taiko update` and then `./taiko up`
 `custom.yml` is not tracked by git and can be used to override anything in the provided yml files. If you use it,
 add it to `COMPOSE_FILE` in `.env`
 
-The public HTTP/WS APIs do not expose the `debug` namespace, since it allows rewinding the chain head and profiling. If you really need it, set `EXTRA_FLAGS=--http.api debug,eth,net,web3,txpool,taiko --ws.api debug,eth,net,web3,txpool,taiko` in `.env`.
+The public HTTP/WS APIs do not expose the `debug` namespace, since it allows rewinding the chain head and profiling. To re-enable it, set `EXTRA_FLAGS=--http.api eth,net,web3,txpool,taiko,debug --ws.api eth,net,web3,txpool,taiko,debug` in your untracked `.env` and re-create the container with `./taiko up`; `EXTRA_FLAGS` is appended after the built-in flags and the last `--http.api`/`--ws.api` wins, so no tracked file needs editing.
 
 ## Components
 
